@@ -1,0 +1,24 @@
+-- Tambahkan Highlight ke sebuah NPC
+local npc = workspace:WaitForChild("DummyNPC") -- ganti sesuai nama NPC
+local highlight = Instance.new("Highlight")
+highlight.Parent = npc
+highlight.FillColor = Color3.fromRGB(0, 255, 0) -- hijau
+highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+
+-- Tambahkan BillboardGui untuk health bar
+local billboard = Instance.new("BillboardGui")
+billboard.Parent = npc.Head
+billboard.Adornee = npc.Head
+billboard.Size = UDim2.new(5, 0, 1, 0)
+billboard.StudsOffset = Vector3.new(0, 2, 0)
+billboard.AlwaysOnTop = true
+
+local bar = Instance.new("Frame", billboard)
+bar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+bar.Size = UDim2.new(1, 0, 1, 0)
+
+-- Update health bar sesuai HP NPC
+local humanoid = npc:WaitForChild("Humanoid")
+humanoid.HealthChanged:Connect(function(health)
+    bar.Size = UDim2.new(health / humanoid.MaxHealth, 0, 1, 0)
+end)
