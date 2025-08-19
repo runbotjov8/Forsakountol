@@ -1,0 +1,109 @@
+-- cave divers whe- 🕳️
+
+local runService = game:GetService("RunService")
+
+local isPaused = false
+local isStopped = false
+
+local player = game.Players.LocalPlayer
+local playerName = player.Name
+local survivorsFolder = workspace:WaitForChild("Players"):WaitForChild("Survivors")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = cloneref(game:GetService("CoreGui"))
+
+local function accwait(duration)
+    if not duration or duration <= 0 then return end
+    local start = os.clock()
+    local conn
+    conn = runService.PreRender:Connect(function()
+        if isStopped then conn:Disconnect() end
+    end)
+    while os.clock() - start < duration do
+        if isStopped then
+            conn:Disconnect()
+            return
+        end
+        while isPaused and not isStopped do
+            runService.PreRender:Wait()
+        end
+        runService.PreRender:Wait()
+    end
+    conn:Disconnect()
+end
+
+local button = Instance.new("TextButton")
+button.Parent = screenGui
+button.Size = UDim2.new(0, 100, 0, 50)
+button.Position = UDim2.new(0.8, -110, 0.4, -25)
+button.Text = "Do Generator"
+button.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+button.TextColor3 = Color3.new(1, 1, 1)
+button.Draggable = true
+button.Active = true
+
+local player = game.Players.LocalPlayer
+local char = player.Character
+local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+local cooldown = false 
+
+local function getNearestGenerator()
+    local playerModel = nil
+    for _, model in pairs(survivorsFolder:GetChildren()) do
+        if model:IsA("Model") and model:GetAttribute("Username") == playerName then
+            playerModel = model
+            break
+        end
+    end
+
+    if not playerModel then
+        warn("Player model not found in Survivors folder!")
+        return
+    end
+
+    local rootPart = playerModel:WaitForChild("HumanoidRootPart") -- Use root part from player's model
+    local closestGen = nil
+    local shortestDist = math.huge
+
+    local map = workspace:WaitForChild("Map"):WaitForChild("Ingame"):WaitForChild("Map")
+
+    for _, obj in pairs(map:GetChildren()) do
+        if obj:IsA("Model") and obj.Name == "Generator" then
+            local primaryPart = obj.PrimaryPart or obj:FindFirstChild("PrimaryPart") -- Ensure it has a PrimaryPart
+            if primaryPart then
+                local dist = (primaryPart.Position - rootPart.Position).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closestGen = obj
+                end
+            end
+        end
+    end
+
+    return closestGen
+end
+
+button.MouseButton1Click:Connect(function()
+    if cooldown then return end -- Prevent multiple clicks
+
+    cooldown = true 
+    button.Text = "Cooldown"
+
+    local nearestGen = getNearestGenerator()
+    if nearestGen then
+        local remotes = nearestGen:WaitForChild("Remotes")
+remotes:WaitForChild("RE"):FireServer()
+accwait(0.1)
+
+        
+        
+
+        
+    else
+        warn("No nearby generator found!")
+    end
+    accwait(0.9)
+    button.Text = "Do Generator"
+    cooldown = false 
+end)
