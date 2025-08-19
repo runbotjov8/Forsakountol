@@ -1,0 +1,62 @@
+-- GUI Button Setup
+local player = game.Players.LocalPlayer
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game:GetService("CoreGui")
+
+local button = Instance.new("TextButton")
+button.Parent = screenGui
+button.Size = UDim2.new(0, 140, 0, 50)
+button.Position = UDim2.new(0.8, -70, 0.8, -25)
+button.Text = "Do Generator"
+button.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+button.TextColor3 = Color3.new(1, 1, 1)
+button.Font = Enum.Font.SourceSansBold
+button.TextSize = 18
+button.Draggable = true
+
+-- VARIABEL GENERATOR YANG DI-INTERACT
+local currentGen = nil
+
+-- Simpan generator terakhir saat kita interaksi manual
+for _, map in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+    if map:IsA("Model") and map.Name == "Generator" and map:FindFirstChild("Remotes") then
+        local remotes = map.Remotes
+        local rf = remotes:WaitForChild("RF")
+
+        -- hook fungsi enter
+        local oldInvoke
+        oldInvoke = hookfunction(rf.InvokeServer, function(self, ...)
+            local args = {...}
+            if tostring(args[1]) == "enter" then
+                currentGen = map
+            end
+            return oldInvoke(self, unpack(args))
+        end)
+    end
+end
+
+-- Fungsi sekali klik kerjakan generator
+local function doGeneratorOnce()
+    if not currentGen then
+        warn("Belum ada generator yang di-interact!")
+        return
+    end
+
+    local remotes = currentGen:WaitForChild("Remotes")
+    local RF = remotes:WaitForChild("RF")
+    local RE = remotes:WaitForChild("RE")
+
+    -- Masuk generator
+    RF:InvokeServer("enter")
+
+    -- Kirim 1x event puzzle (⚠️ isi param sesuai data asli di Forsaken)
+    RE:FireServer("Success") -- << placeholder, ganti dengan argumen asli skillcheck/puzzle
+
+    -- Keluar generator
+    RF:InvokeServer("leave")
+end
+
+-- Klik tombol = kerjakan sekali
+button.MouseButton1Click:Connect(function()
+    doGeneratorOnce()
+end)
